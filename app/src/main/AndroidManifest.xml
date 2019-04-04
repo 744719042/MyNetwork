@@ -19,7 +19,7 @@
         </activity>
 
         <service android:name=".RestartService"
-            android:process=":remote">
+            android:process="com.example.remote">
         </service>
 
     </application>
