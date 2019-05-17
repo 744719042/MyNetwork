@@ -12,6 +12,12 @@
         android:textAllCaps="false"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Hello World!" />
+        android:text="网络测试" />
 
+    <Button
+        android:onClick="click"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="HTTPS测试" />
 </LinearLayout>

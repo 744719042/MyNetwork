@@ -2,10 +2,14 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.mynetwork">
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
     <application
+        android:name=".MyApplication"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
-        android:name=".MyApplication"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
@@ -18,10 +22,12 @@
             </intent-filter>
         </activity>
 
-        <service android:name=".RestartService"
-            android:process="com.example.remote">
-        </service>
+        <service
+            android:name=".RestartService"
+            android:process="com.example.remote" />
 
+        <activity android:name=".NetTestActivity" />
+        <activity android:name=".HttpsTestActivity"></activity>
     </application>
 
 </manifest>
