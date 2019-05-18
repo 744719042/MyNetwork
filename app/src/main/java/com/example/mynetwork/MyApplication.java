@@ -1,14 +1,17 @@
 package com.example.mynetwork;
 
 import android.app.Application;
+import android.content.Context;
 import android.util.Log;
 
 public class MyApplication extends Application {
     private static final String TAG = "MyApplication";
+    private static Context sContext;
 
     @Override
     public void onCreate() {
         super.onCreate();
+        sContext = this;
         CrashLogManager.init(this);
         final Thread.UncaughtExceptionHandler defaultHandler = Thread.getDefaultUncaughtExceptionHandler();
         Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
@@ -21,5 +24,9 @@ public class MyApplication extends Application {
             }
         });
         CrashLogManager.getInstance().upload();
+    }
+
+    public static Context getContext() {
+        return sContext;
     }
 }
