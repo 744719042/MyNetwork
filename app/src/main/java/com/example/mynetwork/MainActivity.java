@@ -27,6 +27,11 @@ public class MainActivity extends AppCompatActivity {
         startActivity(intent);
     }
 
+    public void testHttps(View view) {
+        Intent intent = new Intent(this, HttpsTestActivity.class);
+        startActivity(intent);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
