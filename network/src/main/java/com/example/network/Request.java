@@ -1,6 +1,6 @@
 package com.example.network;
 
-public abstract class Request {
+public abstract class Request<T> {
     private Headers mHeaders;
     private RequestBody mBody;
 
@@ -53,4 +53,6 @@ public abstract class Request {
     public RequestMethod getMethod() {
         return mMethod;
     }
+
+    public abstract void execute(RequestCallback<T> callback);
 }
