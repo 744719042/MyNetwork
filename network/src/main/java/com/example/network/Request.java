@@ -1,6 +1,6 @@
 package com.example.network;
 
-public abstract class Request<T> {
+public abstract class Request {
     private Headers mHeaders;
     private RequestBody mBody;
 
@@ -8,6 +8,10 @@ public abstract class Request<T> {
     private Version mProtocolVersion = Version.HTTP_2;
     private String mUrl;
     private RequestMethod mMethod;
+    private String mRedirectUrl;
+
+    private volatile boolean mCancel = false;
+    private int mRetryCount = 0;
 
     public Request(String url, RequestMethod method) {
         this.mUrl = url;
@@ -54,5 +58,27 @@ public abstract class Request<T> {
         return mMethod;
     }
 
-    public abstract void execute(RequestCallback<T> callback);
+    public boolean isCancel() {
+        return mCancel;
+    }
+
+    public void cancel() {
+        this.mCancel = true;
+    }
+
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.mRetryCount = retryCount;
+    }
+
+    public String getRedirectUrl() {
+        return mRedirectUrl;
+    }
+
+    public void setRedirectUrl(String mRedirectUrl) {
+        this.mRedirectUrl = mRedirectUrl;
+    }
 }

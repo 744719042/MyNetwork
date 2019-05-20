@@ -1,6 +1,6 @@
 package com.example.network;
 
-public abstract class Response {
+public class Response {
     private Headers mHeaders;
     private ResponseBody mResponseBody;
     private int mStatus;
