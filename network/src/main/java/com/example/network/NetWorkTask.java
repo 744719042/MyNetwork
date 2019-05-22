@@ -13,11 +13,13 @@ import java.util.Map;
 
 public class NetWorkTask implements Runnable {
     private Request request;
-    private DispatcherCallback callback;
+    private Callback callback;
+    private DispatcherCallback dispatcherCallback;
 
-    public NetWorkTask(Request request, DispatcherCallback callback) {
+    public NetWorkTask(Request request, Callback callback, DispatcherCallback dispatcherCallback) {
         this.request = request;
         this.callback = callback;
+        this.dispatcherCallback = dispatcherCallback;
     }
 
     @Override
@@ -28,7 +30,7 @@ public class NetWorkTask implements Runnable {
         }
 
         int retryCount = request.getRetryCount();
-        String url = request.getUrl();
+        String url = request.getUrl().getUrl();
         RequestMethod method = request.getMethod();
         RequestBody requestBody = request.getBody();
         Headers headers = request.getHeaders();
@@ -50,9 +52,7 @@ public class NetWorkTask implements Runnable {
                 }
                 if (requestBody != null) {
                     OutputStream outputStream = httpURLConnection.getOutputStream();
-                    outputStream.write(requestBody.body().getBytes("UTF-8"));
-                    outputStream.flush();
-                    outputStream.close();
+                    requestBody.writeTo(outputStream);
                 }
 
                 httpURLConnection.connect();
@@ -111,20 +111,28 @@ public class NetWorkTask implements Runnable {
     }
 
     private void notifyFailure(int error, MyNetException e) {
-        if (callback != null) {
-            callback.onFailure(request, error, e);
+        if (dispatcherCallback != null) {
+            dispatcherCallback.onFailure(this, error, e);
         }
     }
 
     private void notifySuccess(Response response) {
-        if (callback != null) {
-            callback.onSuccess(request, response);
+        if (dispatcherCallback != null) {
+            dispatcherCallback.onSuccess(this, response);
         }
     }
 
     private void notifyCancel() {
-        if (callback != null) {
-            callback.onCancel(request);
+        if (dispatcherCallback != null) {
+            dispatcherCallback.onCancel(this);
         }
+    }
+
+    Request getRequest() {
+        return request;
+    }
+
+    Callback getCallback() {
+        return callback;
     }
 }

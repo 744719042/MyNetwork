@@ -6,15 +6,15 @@ public abstract class Request {
 
     private HttpProtocol mProtocol = HttpProtocol.HTTP;
     private Version mProtocolVersion = Version.HTTP_2;
-    private String mUrl;
+    private HttpUrl mUrl;
     private RequestMethod mMethod;
-    private String mRedirectUrl;
+    private HttpUrl mRedirectUrl;
 
     private volatile boolean mCancel = false;
     private int mRetryCount = 0;
 
     public Request(String url, RequestMethod method) {
-        this.mUrl = url;
+        this.mUrl = new HttpUrl(url);
         this.mMethod = method;
     }
 
@@ -50,7 +50,7 @@ public abstract class Request {
         this.mProtocolVersion = protocolVersion;
     }
 
-    public String getUrl() {
+    public HttpUrl getUrl() {
         return mUrl;
     }
 
@@ -74,11 +74,11 @@ public abstract class Request {
         this.mRetryCount = retryCount;
     }
 
-    public String getRedirectUrl() {
+    public HttpUrl getRedirectUrl() {
         return mRedirectUrl;
     }
 
     public void setRedirectUrl(String mRedirectUrl) {
-        this.mRedirectUrl = mRedirectUrl;
+        this.mRedirectUrl = new HttpUrl(mRedirectUrl);
     }
 }

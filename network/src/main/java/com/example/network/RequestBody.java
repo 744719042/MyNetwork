@@ -1,5 +1,8 @@
 package com.example.network;
 
+import java.io.IOException;
+import java.io.OutputStream;
+
 public interface RequestBody {
-    String body();
+    void writeTo(OutputStream outputStream) throws IOException;
 }
