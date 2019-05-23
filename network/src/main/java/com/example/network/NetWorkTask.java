@@ -37,6 +37,91 @@ public class NetWorkTask implements Runnable {
         this.sslSocketFactory = sslSocketFactory;
     }
 
+    public NetWorkTask(Request request, int connectTimeout, int readTimeout,
+                       HostnameVerifier hostnameVerifier,
+                       SSLSocketFactory sslSocketFactory) {
+        this(request, null, null, connectTimeout, readTimeout, hostnameVerifier, sslSocketFactory);
+    }
+
+    public Response execute() {
+        if (request.isCancel()) {
+            return null;
+        }
+
+        String url = request.getUrl().getUrl();
+        int retryCount = request.getRetryCount();
+
+        while (true) {
+            HttpURLConnection httpURLConnection = null;
+            try {
+                httpURLConnection = openConnection(url);
+                httpURLConnection.connect();
+                int code = httpURLConnection.getResponseCode();
+                if (request.isCancel()) {
+                    return null;
+                }
+
+                if (code >= 200 && code < 300) { // 请求成功
+                    Response response = new Response();
+                    response.setStatus(code);
+                    response.setMessage(httpURLConnection.getResponseMessage());
+                    response.setResponseBody(new ResponseBody(httpURLConnection.getInputStream()));
+                    response.setHeaders(Headers.of(httpURLConnection));
+                    return response;
+                } else if (code >= 300 && code < 400) {
+                    String redirectUrl = httpURLConnection.getHeaderField("Location");
+                    if (!TextUtils.isEmpty(redirectUrl)) {
+                        url = redirectUrl;
+                        request.setRedirectUrl(Uri.parse(redirectUrl)); // 解析失败抛出异常
+                        continue;
+                    }
+                }
+            } catch (SocketTimeoutException e) {
+                if (request.isCancel()) {
+                    return null;
+                }
+                if (retryCount > 0) {
+                    retryCount--;
+                    continue;
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                if (httpURLConnection != null) {
+                    httpURLConnection.disconnect();
+                }
+            }
+            return null;
+        }
+    }
+
+    private HttpURLConnection openConnection(String url) throws IOException {
+        RequestMethod method = request.getMethod();
+        RequestBody requestBody = request.getBody();
+        Headers headers = request.getHeaders();
+
+        HttpURLConnection httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
+        if (httpURLConnection instanceof HttpsURLConnection) {
+            ((HttpsURLConnection) httpURLConnection).setHostnameVerifier(hostnameVerifier);
+            ((HttpsURLConnection) httpURLConnection).setSSLSocketFactory(sslSocketFactory);
+        }
+        httpURLConnection.setRequestMethod(method.name());
+        httpURLConnection.setConnectTimeout(connectTimeout);
+        httpURLConnection.setReadTimeout(readTimeout);
+        httpURLConnection.setDoInput(true);
+        httpURLConnection.setDoOutput(requestBody != null);
+        httpURLConnection.setInstanceFollowRedirects(false);
+
+        if (requestBody != null) {
+            OutputStream outputStream = httpURLConnection.getOutputStream();
+            requestBody.writeTo(outputStream, headers);
+        }
+        for (Map.Entry<String, String> entry : headers.getValues().entrySet()) {
+            httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
+        }
+        return httpURLConnection;
+    }
+
     @Override
     public void run() {
         if (request.isCancel()) {
@@ -44,37 +129,15 @@ public class NetWorkTask implements Runnable {
             return;
         }
 
-        int retryCount = request.getRetryCount();
         String url = request.getUrl().getUrl();
-        RequestMethod method = request.getMethod();
-        RequestBody requestBody = request.getBody();
-        Headers headers = request.getHeaders();
+        int retryCount = request.getRetryCount();
 
         int error = -1;
         Throwable throwable = null;
         while (true) {
             HttpURLConnection httpURLConnection = null;
             try {
-                httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
-                if (httpURLConnection instanceof HttpsURLConnection) {
-                    ((HttpsURLConnection) httpURLConnection).setHostnameVerifier(hostnameVerifier);
-                    ((HttpsURLConnection) httpURLConnection).setSSLSocketFactory(sslSocketFactory);
-                }
-                httpURLConnection.setRequestMethod(method.name());
-                httpURLConnection.setConnectTimeout(connectTimeout);
-                httpURLConnection.setReadTimeout(readTimeout);
-                httpURLConnection.setDoInput(true);
-                httpURLConnection.setDoOutput(requestBody != null);
-                httpURLConnection.setInstanceFollowRedirects(false);
-
-                if (requestBody != null) {
-                    OutputStream outputStream = httpURLConnection.getOutputStream();
-                    requestBody.writeTo(outputStream, headers);
-                }
-                for (Map.Entry<String, String> entry : headers.getValues().entrySet()) {
-                    httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
-                }
-
+                httpURLConnection = openConnection(url);
                 httpURLConnection.connect();
                 int code = httpURLConnection.getResponseCode();
                 if (request.isCancel()) {

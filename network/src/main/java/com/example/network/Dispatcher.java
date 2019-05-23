@@ -17,15 +17,7 @@ public class Dispatcher implements DispatcherCallback {
     private MainThreadPoster mainThreadPoster = new MainThreadPoster();
     private BackgroundPoster backgroundPoster = new BackgroundPoster(executor);
 
-    private static class DispatcherHolder {
-        private static final Dispatcher INSTANCE = new Dispatcher();
-    }
-
-    public static Dispatcher getInstance() {
-        return DispatcherHolder.INSTANCE;
-    }
-
-    public void enqueue(NetWorkTask task) {
+    public synchronized void enqueue(NetWorkTask task) {
         Request request = task.getRequest();
         if (runningQueue.size() < MAX_REQUESTS && isPerHostFull(request.getUrl().getHost())) {
             executor.execute(task);
@@ -70,7 +62,7 @@ public class Dispatcher implements DispatcherCallback {
     }
 
     @Override
-    public void onSuccess(NetWorkTask task, final Response response) {
+    public synchronized void onSuccess(NetWorkTask task, final Response response) {
         runningQueue.remove(task);
         startReadyTasks();
         final Callback callback = task.getCallback();
@@ -102,7 +94,7 @@ public class Dispatcher implements DispatcherCallback {
     }
 
     @Override
-    public void onFailure(NetWorkTask task, final int error, final MyNetException exception) {
+    public synchronized void onFailure(NetWorkTask task, final int error, final MyNetException exception) {
         runningQueue.remove(task);
         startReadyTasks();
         final Callback callback = task.getCallback();
@@ -134,7 +126,7 @@ public class Dispatcher implements DispatcherCallback {
     }
 
     @Override
-    public void onCancel(NetWorkTask task) {
+    public synchronized void onCancel(NetWorkTask task) {
         runningQueue.remove(task);
         startReadyTasks();
     }

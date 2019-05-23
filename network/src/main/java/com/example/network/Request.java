@@ -69,7 +69,7 @@ public class Request {
     }
 
     public static class Builder {
-        private Headers header;
+        private Headers header = Headers.of();
         private RequestBody body;
         private Version protocolVersion = Version.HTTP_1_1;
         private HttpUrl url;

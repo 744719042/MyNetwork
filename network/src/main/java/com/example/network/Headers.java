@@ -21,6 +21,10 @@ public class Headers {
         return headers;
     }
 
+    public static Headers of() {
+        return new Headers();
+    }
+
     public void addHeader(String header, String value) {
         mValues.put(header, value);
     }

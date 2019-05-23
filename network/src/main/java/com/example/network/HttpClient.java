@@ -12,10 +12,16 @@ public class HttpClient {
         this.dispatcher = new Dispatcher();
     }
 
-    public void execute(Request request, Callback callback) {
+    public void enqueue(Request request, Callback callback) {
         NetWorkTask workTask = new NetWorkTask(request, callback, dispatcher, builder.connectTimeout,
                 builder.readTimeout, builder.hostnameVerifier, builder.sslSocketFactory);
         dispatcher.enqueue(workTask);
+    }
+
+    public Response execute(Request request) {
+        NetWorkTask workTask = new NetWorkTask(request, builder.connectTimeout,
+                builder.readTimeout, builder.hostnameVerifier, builder.sslSocketFactory);
+        return workTask.execute();
     }
 
     public static class Builder {

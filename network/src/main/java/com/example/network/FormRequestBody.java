@@ -22,6 +22,10 @@ public class FormRequestBody implements RequestBody {
         return this;
     }
 
+    public void clear() {
+        params.clear();
+    }
+
     @Override
     public void writeTo(OutputStream outputStream, Headers headers) throws IOException {
         if (!params.isEmpty()) {
