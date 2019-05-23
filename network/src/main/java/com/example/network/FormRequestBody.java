@@ -23,7 +23,7 @@ public class FormRequestBody implements RequestBody {
     }
 
     @Override
-    public void writeTo(OutputStream outputStream) throws IOException {
+    public void writeTo(OutputStream outputStream, Headers headers) throws IOException {
         if (!params.isEmpty()) {
             StringBuilder builder = new StringBuilder();
             for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -32,9 +32,10 @@ public class FormRequestBody implements RequestBody {
             builder.deleteCharAt(builder.length() - 1);
 
             String content = builder.toString();
-            outputStream.write(content.getBytes("UTF-8"));
-            outputStream.flush();
-            outputStream.close();
+            byte[] data = content.getBytes("UTF-8");
+            headers.addHeader("Content-Type", "application/x-www-form-urlencoded");
+            headers.addHeader("Content-Length", String.valueOf(data.length));
+            outputStream.write(data);
         }
     }
 

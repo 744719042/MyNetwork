@@ -1,5 +1,6 @@
 package com.example.network;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import java.io.IOException;
@@ -11,15 +12,29 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.Map;
 
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLSocketFactory;
+
 public class NetWorkTask implements Runnable {
     private Request request;
     private Callback callback;
     private DispatcherCallback dispatcherCallback;
+    private int connectTimeout;
+    private int readTimeout;
+    private HostnameVerifier hostnameVerifier;
+    private SSLSocketFactory sslSocketFactory;
 
-    public NetWorkTask(Request request, Callback callback, DispatcherCallback dispatcherCallback) {
+    public NetWorkTask(Request request, Callback callback, DispatcherCallback dispatcherCallback,
+                       int connectTimeout, int readTimeout, HostnameVerifier hostnameVerifier,
+                       SSLSocketFactory sslSocketFactory) {
         this.request = request;
         this.callback = callback;
         this.dispatcherCallback = dispatcherCallback;
+        this.connectTimeout = connectTimeout;
+        this.readTimeout = readTimeout;
+        this.hostnameVerifier = hostnameVerifier;
+        this.sslSocketFactory = sslSocketFactory;
     }
 
     @Override
@@ -41,18 +56,23 @@ public class NetWorkTask implements Runnable {
             HttpURLConnection httpURLConnection = null;
             try {
                 httpURLConnection = (HttpURLConnection) new URL(url).openConnection();
+                if (httpURLConnection instanceof HttpsURLConnection) {
+                    ((HttpsURLConnection) httpURLConnection).setHostnameVerifier(hostnameVerifier);
+                    ((HttpsURLConnection) httpURLConnection).setSSLSocketFactory(sslSocketFactory);
+                }
                 httpURLConnection.setRequestMethod(method.name());
-                httpURLConnection.setConnectTimeout(3000);
-                httpURLConnection.setReadTimeout(3000);
+                httpURLConnection.setConnectTimeout(connectTimeout);
+                httpURLConnection.setReadTimeout(readTimeout);
                 httpURLConnection.setDoInput(true);
                 httpURLConnection.setDoOutput(requestBody != null);
                 httpURLConnection.setInstanceFollowRedirects(false);
-                for (Map.Entry<String, String> entry : headers.getValues().entrySet()) {
-                    httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
-                }
+
                 if (requestBody != null) {
                     OutputStream outputStream = httpURLConnection.getOutputStream();
-                    requestBody.writeTo(outputStream);
+                    requestBody.writeTo(outputStream, headers);
+                }
+                for (Map.Entry<String, String> entry : headers.getValues().entrySet()) {
+                    httpURLConnection.addRequestProperty(entry.getKey(), entry.getValue());
                 }
 
                 httpURLConnection.connect();
@@ -73,7 +93,7 @@ public class NetWorkTask implements Runnable {
                     String redirectUrl = httpURLConnection.getHeaderField("Location");
                     if (!TextUtils.isEmpty(redirectUrl)) {
                         url = redirectUrl;
-                        request.setRedirectUrl(url);
+                        request.setRedirectUrl(Uri.parse(redirectUrl)); // 解析失败抛出异常
                         continue;
                     }
                 } else  {

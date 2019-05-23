@@ -43,8 +43,9 @@ public class MultiPartRequestBody implements RequestBody {
     }
 
     @Override
-    public void writeTo(OutputStream outputStream) throws IOException {
+    public void writeTo(OutputStream outputStream, Headers headers) throws IOException {
         StringBuilder builder = new StringBuilder();
+        headers.addHeader("Content-Type", "multipart/form-data; boundary=" + BOUNDARY);
         if (!params.isEmpty()) {
             for (Map.Entry<String, String> entry : params.entrySet()) {
                 builder.append("--" + BOUNDARY + "\r\n");
@@ -75,6 +76,5 @@ public class MultiPartRequestBody implements RequestBody {
         }
         outputStream.write("\r\n".getBytes("UTF-8"));
         outputStream.write(("--" + BOUNDARY + "--").getBytes("UTF-8"));
-        outputStream.flush();
     }
 }

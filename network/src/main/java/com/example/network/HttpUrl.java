@@ -3,20 +3,28 @@ package com.example.network;
 import android.net.Uri;
 
 public class HttpUrl {
-    private String url;
     private String schema;
     private String host;
     private int port;
     private String path;
     private String query;
-    private Uri uri;
+    private String url;
 
-    public HttpUrl(String url) {
-        this.url = url;
-        this.uri = Uri.parse(url);
+    private HttpUrl(Builder builder) {
+        this.schema = builder.schema;
+        this.host = builder.host;
+        this.port = builder.port;
+        this.path = builder.path;
+        this.query = builder.query;
+
+        Uri uri = new Uri.Builder().scheme(schema).authority(host + ":" + port).path(path).query(query).build();
+        url = uri.toString();
+    }
+
+    HttpUrl(Uri uri) {
+        this.schema = uri.getScheme();
         this.host = uri.getHost();
         this.port = uri.getPort();
-        this.schema = uri.getScheme();
         this.path = uri.getPath();
         this.query = uri.getQuery();
     }
@@ -45,7 +53,45 @@ public class HttpUrl {
         return query;
     }
 
-    public String getQueryParameter(String name) {
-        return uri.getQueryParameter(name);
+    public static class Builder {
+        private String schema;
+        private String host;
+        private int port;
+        private String path;
+        private String query;
+
+        public Builder() {
+
+        }
+
+        public Builder schema(HttpProtocol protocol) {
+            this.schema = protocol == HttpProtocol.HTTP ? "http" : "https";
+            this.port = protocol == HttpProtocol.HTTP ? 80 : 443;
+            return this;
+        }
+
+        public Builder host(String host) {
+            this.host = host;
+            return this;
+        }
+
+        public Builder port(int port) {
+            this.port = port;
+            return this;
+        }
+
+        public Builder path(String path) {
+            this.path = path;
+            return this;
+        }
+
+        public Builder query(String query) {
+            this.query = query;
+            return this;
+        }
+
+        public HttpUrl build() {
+            return new HttpUrl(this);
+        }
     }
 }

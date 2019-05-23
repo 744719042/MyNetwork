@@ -1,93 +1,125 @@
 package com.example.network;
 
-public abstract class Request {
-    private Headers mHeaders;
-    private RequestBody mBody;
+import android.net.Uri;
 
-    private HttpProtocol mProtocol = HttpProtocol.HTTP;
-    private Version mProtocolVersion = Version.HTTP_2;
-    private HttpUrl mUrl;
-    private RequestMethod mMethod;
-    private HttpUrl mRedirectUrl;
-    private Poster.Type mPosterType = Poster.Type.MAINTHREAD;
+public class Request {
+    private Headers header;
+    private RequestBody body;
+    private Version protocolVersion;
+    private HttpUrl url;
+    private RequestMethod method;
+    private HttpUrl redirectUrl;
+    private Poster.Type postType;
 
-    private volatile boolean mCancel = false;
-    private int mRetryCount = 0;
+    private volatile boolean cancel = false;
+    private int retryCount = 0;
 
-    public Request(String url, RequestMethod method) {
-        this.mUrl = new HttpUrl(url);
-        this.mMethod = method;
+    private Request(Builder builder) {
+        header = builder.header;
+        body = builder.body;
+        protocolVersion = builder.protocolVersion;
+        url = builder.url;
+        method = builder.method;
+        postType = builder.postType;
+        retryCount = builder.retryCount;
     }
 
     public Headers getHeaders() {
-        return mHeaders;
-    }
-
-    public void setHeaders(Headers headers) {
-        this.mHeaders = headers;
+        return header;
     }
 
     public RequestBody getBody() {
-        return mBody;
-    }
-
-    public void setBody(RequestBody mBody) {
-        this.mBody = mBody;
-    }
-
-    public HttpProtocol getProtocol() {
-        return mProtocol;
-    }
-
-    public void setProtocol(HttpProtocol protocol) {
-        this.mProtocol = protocol;
+        return body;
     }
 
     public Version getProtocolVersion() {
-        return mProtocolVersion;
-    }
-
-    public void setProtocolVersion(Version protocolVersion) {
-        this.mProtocolVersion = protocolVersion;
+        return protocolVersion;
     }
 
     public HttpUrl getUrl() {
-        return mUrl;
+        return url;
     }
 
     public RequestMethod getMethod() {
-        return mMethod;
+        return method;
     }
 
     public boolean isCancel() {
-        return mCancel;
+        return cancel;
     }
 
     public void cancel() {
-        this.mCancel = true;
+        this.cancel = true;
     }
 
     public int getRetryCount() {
-        return mRetryCount;
-    }
-
-    public void setRetryCount(int retryCount) {
-        this.mRetryCount = retryCount;
+        return retryCount;
     }
 
     public HttpUrl getRedirectUrl() {
-        return mRedirectUrl;
+        return redirectUrl;
     }
 
-    public void setRedirectUrl(String mRedirectUrl) {
-        this.mRedirectUrl = new HttpUrl(mRedirectUrl);
+    public void setRedirectUrl(Uri uri) {
+        this.redirectUrl = new HttpUrl(uri);
     }
 
     public Poster.Type getPosterType() {
-        return mPosterType;
+        return postType;
     }
 
-    public void setPosterType(Poster.Type mPosterType) {
-        this.mPosterType = mPosterType;
+    public static class Builder {
+        private Headers header;
+        private RequestBody body;
+        private Version protocolVersion = Version.HTTP_1_1;
+        private HttpUrl url;
+        private RequestMethod method;
+        private Poster.Type postType = Poster.Type.MAINTHREAD;
+        private int retryCount = 0;
+
+        public Builder() {
+
+        }
+
+        public Builder header(Headers headers) {
+            this.header = headers;
+            return this;
+        }
+
+        public Builder url(HttpUrl url) {
+            this.url = url;
+            return this;
+        }
+
+        public Builder protocolVersion(Version version) {
+            this.protocolVersion = version;
+            return this;
+        }
+
+        public Builder postType(Poster.Type postType) {
+            this.postType= postType;
+            return this;
+        }
+
+        public Builder retryCount(int retryCount) {
+            this.retryCount = retryCount;
+            return this;
+        }
+
+        public Request get() {
+            this.method = RequestMethod.GET;
+            return new Request(this);
+        }
+
+        public Request head() {
+            this.method = RequestMethod.HEADER;
+            return new Request(this);
+        }
+
+        public Request post(RequestBody requestBody) {
+            this.method = RequestMethod.POST;
+            this.body = requestBody;
+            return new Request(this);
+        }
     }
 }
