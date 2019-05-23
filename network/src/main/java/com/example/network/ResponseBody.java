@@ -13,13 +13,17 @@ public class ResponseBody {
 
     public String string() throws IOException {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        byte[] buf = new byte[1024];
-        int len = -1;
-        while ((len = inputStream.read(buf)) != -1) {
-            bos.write(buf, 0, len);
+        try {
+            byte[] buf = new byte[1024];
+            int len = -1;
+            while ((len = inputStream.read(buf)) != -1) {
+                bos.write(buf, 0, len);
+            }
+            return new String(bos.toByteArray(), "UTF-8");
+        } finally {
+            IOUtils.close(inputStream);
+            IOUtils.close(bos);
         }
-
-        return new String(bos.toByteArray(), "UTF-8");
     }
 
     public InputStream stream() {
