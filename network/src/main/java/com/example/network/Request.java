@@ -9,6 +9,7 @@ public abstract class Request {
     private HttpUrl mUrl;
     private RequestMethod mMethod;
     private HttpUrl mRedirectUrl;
+    private Poster.Type mPosterType = Poster.Type.MAINTHREAD;
 
     private volatile boolean mCancel = false;
     private int mRetryCount = 0;
@@ -80,5 +81,13 @@ public abstract class Request {
 
     public void setRedirectUrl(String mRedirectUrl) {
         this.mRedirectUrl = new HttpUrl(mRedirectUrl);
+    }
+
+    public Poster.Type getPosterType() {
+        return mPosterType;
+    }
+
+    public void setPosterType(Poster.Type mPosterType) {
+        this.mPosterType = mPosterType;
     }
 }

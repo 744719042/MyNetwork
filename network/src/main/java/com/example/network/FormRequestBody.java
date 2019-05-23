@@ -1,5 +1,6 @@
 package com.example.network;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,7 +23,7 @@ public class FormRequestBody implements RequestBody {
     }
 
     @Override
-    public void writeTo(OutputStream outputStream) throws Exception {
+    public void writeTo(OutputStream outputStream) throws IOException {
         if (!params.isEmpty()) {
             StringBuilder builder = new StringBuilder();
             for (Map.Entry<String, String> entry : params.entrySet()) {

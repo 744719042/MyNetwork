@@ -14,6 +14,8 @@ public class Dispatcher implements DispatcherCallback {
     private BlockingQueue<NetWorkTask> runningQueue = new LinkedBlockingDeque<>();
 
     private Executor executor = Executors.newFixedThreadPool(5);
+    private MainThreadPoster mainThreadPoster = new MainThreadPoster();
+    private BackgroundPoster backgroundPoster = new BackgroundPoster(executor);
 
     private static class DispatcherHolder {
         private static final Dispatcher INSTANCE = new Dispatcher();
@@ -51,6 +53,10 @@ public class Dispatcher implements DispatcherCallback {
         for (Iterator<NetWorkTask> i = readyQueue.iterator(); i.hasNext(); ) {
             NetWorkTask task = i.next();
             Request request = task.getRequest();
+            if (request.isCancel()) {
+                i.remove();
+                continue;
+            }
             if (runningQueue.size() < MAX_REQUESTS) {
                 if (isPerHostFull(request.getUrl().getHost())) {
                     i.remove();
@@ -64,22 +70,66 @@ public class Dispatcher implements DispatcherCallback {
     }
 
     @Override
-    public void onSuccess(NetWorkTask task, Response response) {
+    public void onSuccess(NetWorkTask task, final Response response) {
         runningQueue.remove(task);
         startReadyTasks();
         final Callback callback = task.getCallback();
-        if (callback != null) {
-            callback.onSuccess(response);
+        final Poster.Type type = task.getRequest().getPosterType();
+        switch (type) {
+            case MAINTHREAD: {
+                mainThreadPoster.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (callback != null) {
+                            callback.onSuccess(response);
+                        }
+                    }
+                });
+                break;
+            }
+            default: {
+                backgroundPoster.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (callback != null) {
+                            callback.onSuccess(response);
+                        }
+                    }
+                });
+                break;
+            }
         }
     }
 
     @Override
-    public void onFailure(NetWorkTask task, int error, MyNetException exception) {
+    public void onFailure(NetWorkTask task, final int error, final MyNetException exception) {
         runningQueue.remove(task);
         startReadyTasks();
-        Callback callback = task.getCallback();
-        if (callback != null) {
-            callback.onFailure(error, exception);
+        final Callback callback = task.getCallback();
+        final Poster.Type type = task.getRequest().getPosterType();
+        switch (type) {
+            case MAINTHREAD: {
+                mainThreadPoster.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (callback != null) {
+                            callback.onFailure(error, exception);
+                        }
+                    }
+                });
+                break;
+            }
+            default: {
+                backgroundPoster.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (callback != null) {
+                            callback.onFailure(error, exception);
+                        }
+                    }
+                });
+                break;
+            }
         }
     }
 
