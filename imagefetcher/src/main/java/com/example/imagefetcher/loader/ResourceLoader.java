@@ -14,7 +14,7 @@ public class ResourceLoader extends AbsBitmapLoader {
     @Override
     public void load(LoadInfo loadInfo, BitmapLoadListener loadListener) {
         Resources resources = ImageFetcher.getInstance().getContext().getResources();
-        Drawable drawable = resources.getDrawable(loadInfo.getResoureId());
+        Drawable drawable = resources.getDrawable(loadInfo.getResourceId());
         if (drawable == null) {
             notifyFailure(loadListener, -1, null);
             return;

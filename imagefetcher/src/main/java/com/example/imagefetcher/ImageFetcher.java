@@ -13,6 +13,7 @@ public class ImageFetcher {
     private Context context;
     private Executor executor;
     private HttpClient httpClient;
+    private Dispatcher dispatcher;
 
     private ImageFetcher(Builder builder) {
         this.context = builder.context;
@@ -23,6 +24,7 @@ public class ImageFetcher {
         executor = Executors.newFixedThreadPool(5);
         imageCache = new ImageCache(builder.memMaxSize, builder.diskMaxSize, diskCacheDir, executor);
         httpClient = builder.httpClient;
+        dispatcher = new Dispatcher(this);
     }
 
     public static ImageFetcher getInstance() {

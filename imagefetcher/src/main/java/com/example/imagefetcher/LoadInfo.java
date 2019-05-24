@@ -2,21 +2,27 @@ package com.example.imagefetcher;
 
 import android.widget.ImageView;
 
+import java.util.UUID;
+
 public class LoadInfo {
     private String path;
-    private int resoureId;
+    private int resourceId;
     private String url;
     private ImageView imageView;
     private BitmapLoadListener loadListener;
     private int error;
     private int placeholder;
 
+    // 标识一次加载
+    private String key = UUID.randomUUID().toString();
+    private Object tag;
+
     public String getPath() {
         return path;
     }
 
-    public int getResoureId() {
-        return resoureId;
+    public int getResourceId() {
+        return resourceId;
     }
 
     public String getUrl() {
@@ -37,5 +43,13 @@ public class LoadInfo {
 
     public BitmapLoadListener getLoadListener() {
         return loadListener;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public Object getTag() {
+        return tag;
     }
 }
