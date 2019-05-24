@@ -21,7 +21,7 @@ public class HttpUrl {
         url = uri.toString();
     }
 
-    HttpUrl(Uri uri) {
+    public HttpUrl(Uri uri) {
         this.schema = uri.getScheme();
         this.host = uri.getHost();
         this.port = uri.getPort();

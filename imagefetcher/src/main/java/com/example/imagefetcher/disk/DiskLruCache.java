@@ -16,8 +16,6 @@ public class DiskLruCache {
     private long mMaxSize;
     private File mDir;
     private DiskFileName mDiskFileName;
-    private volatile boolean mInitialized = false;
-    private Object mWaitLock = new Object();
 
     private DiskLruCache(long maxSize, File dir, DiskFileName diskFileName) {
         this.mMaxSize = maxSize;
@@ -26,26 +24,22 @@ public class DiskLruCache {
     }
 
     public void initDiskLruCache() {
-        synchronized (mWaitLock) {
-            File[] files = mDir.listFiles();
-            if (!CollectionUtils.isEmpty(files)) {
-                insertSort(files);
-                long curSize = 0;
-                int i = 0;
-                for (; i < files.length; i++) {
-                    if (curSize > mMaxSize) {
-                        break;
-                    }
-                    curSize += files[i].length();
+        File[] files = mDir.listFiles();
+        if (!CollectionUtils.isEmpty(files)) {
+            insertSort(files);
+            long curSize = 0;
+            int i = 0;
+            for (; i < files.length; i++) {
+                if (curSize > mMaxSize) {
+                    break;
                 }
-
-                i = i == 0 ? 0 : i - 1;
-                for (; i < files.length; i++) {
-                    files[i].delete();
-                }
+                curSize += files[i].length();
             }
-            mInitialized = true;
-            mWaitLock.notifyAll();
+
+            i = i == 0 ? 0 : i - 1;
+            for (; i < files.length; i++) {
+                files[i].delete();
+            }
         }
     }
 
@@ -54,7 +48,7 @@ public class DiskLruCache {
      * @param files
      * @return
      */
-    public static File[] insertSort(File[] files) {
+    private static File[] insertSort(File[] files) {
         try {
             for (int i = 1; i < files.length; i++) {
                 File cur = files[i];
@@ -74,7 +68,7 @@ public class DiskLruCache {
     }
 
     public static DiskLruCache open(long maxSize, File dir) {
-        return open(maxSize, dir, null);
+        return open(maxSize, dir, new MD5DiskFileName());
     }
 
     public static DiskLruCache open(long maxSize, File dir, DiskFileName diskFileName) {
@@ -92,63 +86,41 @@ public class DiskLruCache {
         return new DiskLruCache(maxSize, dir, diskFileName);
     }
 
-    private void waitForStarted() {
-        if (!mInitialized) {
-            synchronized (mWaitLock) {
-                while (!mInitialized) {
-                    try {
-                        mWaitLock.wait();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-    }
-
-    public InputStream saveFile(String url) {
-        waitForStarted();
+    public synchronized OutputStream newOutputStream(String url) throws IOException {
         File file = getFile(getFileName(url));
-        InputStream inputStream = null;
-        try {
+        if (file.exists()) {
+            file.delete();
+        } else {
+            file = getFile(getTmpFileName(url));
             if (file.exists()) {
                 file.delete();
-            } else {
-                file = getFile(getTmpFileName(url));
-                if (file.exists()) {
-                    file.delete();
-                }
-                file.createNewFile();
-                inputStream = new FileInputStream(file);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+            file.createNewFile();
         }
-
-        return inputStream;
+        return new FileOutputStream(file);
     }
 
-    public OutputStream readFile(String url) {
-        waitForStarted();
-        OutputStream outputStream = null;
-        File file = getFile(getFileName(url));
-        try {
-            outputStream = new FileOutputStream(file);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        }
-        return outputStream;
-    }
-
-    public void renameTo(String url) {
-        waitForStarted();
+    public synchronized void commitOutputStream(String url) {
         File file = getFile(getTmpFileName(url));
         if (file.exists()) {
             file.renameTo(getFile(getFileName(url)));
         }
     }
+
+    public synchronized void clearOutputStream(String url) {
+        try {
+            File file = getFile(getTmpFileName(url));
+            file.delete();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public synchronized InputStream newInputStream(String url) throws FileNotFoundException {
+        File file = getFile(getFileName(url));
+        return new FileInputStream(file);
+    }
+
 
     private String getTmpFileName(String url) {
         return mDiskFileName.getName(url) + ".tmp";
@@ -162,8 +134,9 @@ public class DiskLruCache {
         return new File(mDir, name);
     }
 
-    public boolean isFileExist(String url) {
+    public synchronized boolean isFileExist(String url) {
         File file = getFile(getFileName(url));
         return file.exists();
     }
+
 }

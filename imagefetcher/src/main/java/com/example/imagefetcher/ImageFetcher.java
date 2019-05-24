@@ -1,17 +1,56 @@
 package com.example.imagefetcher;
 
+import android.content.Context;
+
+import com.example.network.HttpClient;
+
 import java.io.File;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 public class ImageFetcher {
+    private ImageCache imageCache;
+    private Context context;
+    private Executor executor;
+    private HttpClient httpClient;
 
+    private ImageFetcher(Builder builder) {
+        this.context = builder.context;
+        File diskCacheDir = builder.diskCacheDir;
+        if (diskCacheDir == null) {
+            diskCacheDir = new File(context.getCacheDir() + "/imagefetcher/cache");
+        }
+        executor = Executors.newFixedThreadPool(5);
+        imageCache = new ImageCache(builder.memMaxSize, builder.diskMaxSize, diskCacheDir, executor);
+        httpClient = builder.httpClient;
+    }
 
-    private ImageFetcher(int memMaxSize, long diskMaxSize, File diskCacheDir) {
+    public static ImageFetcher getInstance() {
+        return new ImageFetcher(null);
+    }
+
+    public ImageCache getImageCache() {
+        return imageCache;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    public Executor getExecutor() {
+        return executor;
+    }
+
+    public HttpClient getHttpClient() {
+        return httpClient;
     }
 
     public static class Builder {
         private int memMaxSize;
         private long diskMaxSize;
         private File diskCacheDir;
+        private Context context;
+        private HttpClient httpClient;
 
         public Builder() {
 
@@ -32,8 +71,18 @@ public class ImageFetcher {
             return this;
         }
 
+        public Builder context(Context context) {
+            this.context = context.getApplicationContext();
+            return this;
+        }
+
+        public Builder client(HttpClient httpClient) {
+            this.httpClient = httpClient;
+            return this;
+        }
+
         public ImageFetcher build() {
-            return new ImageFetcher(memMaxSize, diskMaxSize, diskCacheDir);
+            return new ImageFetcher(this);
         }
     }
 }
