@@ -2,9 +2,7 @@ package com.example.imagefetcher.loader;
 
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
-import com.example.imagefetcher.BitmapLoadListener;
 import com.example.imagefetcher.ImageFetcher;
 import com.example.imagefetcher.LoadInfo;
 import com.example.network.IOUtils;
@@ -12,22 +10,19 @@ import com.example.network.IOUtils;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class AssetLoader extends AbsBitmapLoader {
+public class AssetLoader implements BitmapLoader {
     @Override
-    public void load(LoadInfo loadInfo, BitmapLoadListener loadListener) {
+    public Bitmap load(LoadInfo loadInfo) {
         AssetManager assetManager = ImageFetcher.getInstance().getContext().getAssets();
         InputStream inputStream = null;
         try {
-            inputStream = assetManager.open(loadInfo.getPath());
-            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
-            notifySuccess(loadListener, bitmap);
-            return;
+            inputStream = assetManager.open(loadInfo.getUri().toString());
+            return LoaderHelper.decodeStream(inputStream, loadInfo);
         } catch (IOException e) {
             e.printStackTrace();
         } finally {
             IOUtils.close(inputStream);
         }
-
-        notifyFailure(loadListener, -1, null);
+        return null;
     }
 }

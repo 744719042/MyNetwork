@@ -1,32 +1,30 @@
 package com.example.imagefetcher;
 
+import android.net.Uri;
+import android.text.TextUtils;
 import android.widget.ImageView;
 
-import java.util.UUID;
-
 public class LoadInfo {
-    private String path;
     private int resourceId;
-    private String url;
+    private Uri uri;
     private ImageView imageView;
     private BitmapLoadListener loadListener;
     private int error;
     private int placeholder;
+    private int targetWidth;
+    private int targetHeight;
+    private volatile boolean cancel = false;
 
     // 标识一次加载
-    private String key = UUID.randomUUID().toString();
+    private String key;
     private Object tag;
-
-    public String getPath() {
-        return path;
-    }
 
     public int getResourceId() {
         return resourceId;
     }
 
-    public String getUrl() {
-        return url;
+    public Uri getUri() {
+        return uri;
     }
 
     public int getError() {
@@ -46,10 +44,38 @@ public class LoadInfo {
     }
 
     public String getKey() {
+        if (TextUtils.isEmpty(key)) {
+            StringBuilder builder = new StringBuilder();
+            if (resourceId > 0) {
+                builder.append(resourceId);
+            } else {
+                builder.append(uri.toString());
+            }
+
+            builder.append(":").append(targetWidth);
+            builder.append(":").append(targetHeight);
+            key = builder.toString();
+        }
         return key;
     }
 
     public Object getTag() {
         return tag;
+    }
+
+    public void cancel() {
+        cancel = true;
+    }
+
+    public boolean isCancel() {
+        return cancel;
+    }
+
+    public int getTargetWidth() {
+        return targetWidth;
+    }
+
+    public int getTargetHeight() {
+        return targetHeight;
     }
 }

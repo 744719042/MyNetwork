@@ -6,18 +6,16 @@ import android.graphics.Canvas;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 
-import com.example.imagefetcher.BitmapLoadListener;
 import com.example.imagefetcher.ImageFetcher;
 import com.example.imagefetcher.LoadInfo;
 
-public class ResourceLoader extends AbsBitmapLoader {
+public class ResourceLoader implements BitmapLoader {
     @Override
-    public void load(LoadInfo loadInfo, BitmapLoadListener loadListener) {
+    public Bitmap load(LoadInfo loadInfo) {
         Resources resources = ImageFetcher.getInstance().getContext().getResources();
         Drawable drawable = resources.getDrawable(loadInfo.getResourceId());
         if (drawable == null) {
-            notifyFailure(loadListener, -1, null);
-            return;
+            return null;
         }
         Bitmap bitmap = null;
         if (drawable instanceof BitmapDrawable) {
@@ -28,6 +26,6 @@ public class ResourceLoader extends AbsBitmapLoader {
             Canvas canvas = new Canvas(bitmap);
             drawable.draw(canvas);
         }
-        notifySuccess(loadListener, bitmap);
+        return bitmap;
     }
 }

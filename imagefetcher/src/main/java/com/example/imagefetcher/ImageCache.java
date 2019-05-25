@@ -1,7 +1,6 @@
 package com.example.imagefetcher;
 
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 import android.util.LruCache;
 
@@ -55,19 +54,17 @@ public class ImageCache {
         });
     }
 
-    public void addCache(String url, Bitmap bitmap) {
-        if (TextUtils.isEmpty(url) || bitmap == null) {
+    public void addMemCache(String key, Bitmap bitmap) {
+        if (TextUtils.isEmpty(key) || bitmap == null) {
             return;
         }
 
         synchronized (memLock) {
-            memCache.put(url, bitmap);
+            memCache.put(key, bitmap);
         }
-
-        addDiskCache(url, bitmap);
     }
 
-    private void addDiskCache(String url, Bitmap bitmap) {
+    public void addDiskCache(String url, InputStream inputStream) {
         waitForDiskReady();
         if (diskLruCache.isFileExist(url)) {
             return;
@@ -76,7 +73,11 @@ public class ImageCache {
         OutputStream outputStream = null;
         try {
             outputStream = diskLruCache.newOutputStream(url);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, outputStream);
+            int len = -1;
+            byte buf[] = new byte[1024];
+            while ((len = inputStream.read(buf)) != -1) {
+                outputStream.write(buf, 0, len);
+            }
             diskLruCache.commitOutputStream(url);
         } catch (IOException e) {
             e.printStackTrace();
@@ -108,21 +109,16 @@ public class ImageCache {
         return reference.get();
     }
 
-    public Bitmap getDiskCache(String url) {
+    public InputStream getDiskCache(String url) {
         if (TextUtils.isEmpty(url)) {
             return null;
         }
 
         waitForDiskReady();
-
-        InputStream inputStream = null;
         try {
-            inputStream = diskLruCache.newInputStream(url);
-            return BitmapFactory.decodeStream(inputStream);
+            return diskLruCache.newInputStream(url);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        } finally {
-            IOUtils.close(inputStream);
         }
         return null;
     }

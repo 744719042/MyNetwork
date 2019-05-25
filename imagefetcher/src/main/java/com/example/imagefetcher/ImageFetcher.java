@@ -1,17 +1,21 @@
 package com.example.imagefetcher;
 
 import android.content.Context;
+import android.widget.ImageView;
 
 import com.example.network.HttpClient;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ImageFetcher {
     private ImageCache imageCache;
     private Context context;
-    private Executor executor;
+    private ExecutorService executor;
     private HttpClient httpClient;
     private Dispatcher dispatcher;
 
@@ -39,7 +43,7 @@ public class ImageFetcher {
         return context;
     }
 
-    public Executor getExecutor() {
+    public ExecutorService getExecutorService() {
         return executor;
     }
 
