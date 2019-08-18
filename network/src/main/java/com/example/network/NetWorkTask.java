@@ -152,6 +152,7 @@ public class NetWorkTask implements Runnable {
                     response.setResponseBody(new ResponseBody(httpURLConnection.getInputStream()));
                     response.setHeaders(Headers.of(httpURLConnection));
                     notifySuccess(response);
+                    return;
                 } else if (code >= 300 && code < 400) {
                     String redirectUrl = httpURLConnection.getHeaderField("Location");
                     if (!TextUtils.isEmpty(redirectUrl)) {

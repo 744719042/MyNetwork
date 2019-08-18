@@ -27,7 +27,8 @@
             android:process="com.example.remote" />
 
         <activity android:name=".NetTestActivity" />
-        <activity android:name=".HttpsTestActivity"></activity>
+        <activity android:name=".HttpsTestActivity" />
+        <activity android:name=".NetworkActivity"></activity>
     </application>
 
 </manifest>

@@ -16,6 +16,13 @@
         android:text="网络测试" />
 
     <Button
+        android:onClick="testNet"
+        android:textAllCaps="false"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="网络请求" />
+
+    <Button
         android:onClick="testHttps"
         android:textAllCaps="false"
         android:layout_width="match_parent"
